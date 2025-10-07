@@ -1,273 +1,48 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<!doctype html><html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>This Week at VUMC</title>
-
 <style>
 :root{
-  --banner-bg:#3b556e;   /* grayish blue */
-  --banner-fg:#ffffff;   /* white text */
-  --accent-red:#c62828;  /* red header strip */
-  --panel-bg:#ffffff;    /* white list background */
-  --panel-fg:#000000;    /* black list text */
-  --rule:#e5e7eb;        /* light divider */
-  --scale: 1;            /* accessibility font scale (tweak via ?scale=1.2) */
+  --banner-bg:#3b556e; --banner-fg:#ffffff;
+  --accent-red:#c62828; --panel-bg:#ffffff;
+  --panel-fg:#000000;   --rule:#e5e7eb;
+  --scroll-ms:420000ms;
 }
-
 html,body{height:100%}
-body{
-  margin:0;
-  background:transparent;             /* lets ProPresenter background show */
-  color:var(--panel-fg);
-  font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  font-size: calc(16px * var(--scale));
-}
-
-.wrap{
-  display:flex;
-  flex-direction:column;
-  width:100%;
-  height:100%;
-  box-sizing:border-box;
-}
-
-.bar{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:.75rem 1.25rem;
-  background:var(--banner-bg);
-  color:var(--banner-fg);
-}
-.brand{
-  font-weight:800;
-  font-size:clamp(1.25rem, 2.4vw, 2.2rem);
-  letter-spacing:.02em;
-}
-.clock{
-  font-weight:800;
-  font-variant-numeric:tabular-nums;
-  font-size:clamp(1.05rem, 2.0vw, 1.6rem);
-}
-
-.panel{
-  display:flex; flex-direction:column;
-  background:var(--panel-bg);
-  color:var(--panel-fg);
-  border-left:1px solid var(--rule);
-  border-right:1px solid var(--rule);
-  border-bottom:1px solid var(--rule);
-  height:100%;
-  box-sizing:border-box;
-}
-
-.panel-header{
-  background:var(--accent-red);
-  color:#fff;
-  padding:.7rem 1.1rem;
-  font-weight:900;
-  font-size:clamp(1.1rem, 2.2vw, 1.6rem);
-}
-
-.vwrap{ position:relative; overflow:hidden; height:100%; }
-.vcontent{
-  position:absolute; width:100%;
-  animation:vscroll 480000ms linear infinite; /* default 8 min */
-}
-@keyframes vscroll{
-  0%{transform:translateY(0)}
-  98%{transform:translateY(-50%)}   /* duplicate content for seamless loop */
-  100%{transform:translateY(0)}
-}
-
-.day{ padding:0.9rem 1.25rem 1rem; border-bottom:1px solid var(--rule); }
-.dayhead{ font-weight:900; opacity:.95; margin:0 0 .45rem;
-  font-size:clamp(1.1rem, 2.0vw, 1.5rem); }
-.event{ padding:.5rem 0; }
-.title{ font-size:clamp(1.1rem, 2.1vw, 1.6rem); line-height:1.4; font-weight:800; }
-.meta{ opacity:.9; font-size:clamp(1rem, 1.9vw, 1.3rem); margin-top:.2rem; font-weight:600; }
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .vcontent { animation-duration: 999999ms; }
-}
+body{margin:0;background:transparent;color:var(--panel-fg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+.wrap{display:flex;flex-direction:column;width:100%;height:100%;box-sizing:border-box}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--banner-bg);color:var(--banner-fg)}
+.brand{font-weight:800;font-size:clamp(1.1rem,2.2vw,2rem);letter-spacing:.02em}
+.clock{font-weight:700;font-variant-numeric:tabular-nums;font-size:clamp(.95rem,1.8vw,1.4rem)}
+.panel{display:flex;flex-direction:column;background:var(--panel-bg);color:var(--panel-fg);border-left:1px solid var(--rule);border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);height:100%;box-sizing:border-box}
+.panel-header{background:var(--accent-red);color:#fff;padding:.5rem .9rem;font-weight:800;font-size:clamp(1rem,2vw,1.4rem)}
+.vwrap{position:relative;overflow:hidden;height:100%}
+.vcontent{position:absolute;width:100%;animation:vscroll var(--scroll-ms) linear infinite; will-change: transform;}
+@keyframes vscroll{0%{transform:translateY(0)}98%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+.day{padding:.7rem 1rem .8rem;border-bottom:1px solid var(--rule)}
+.dayhead{font-weight:800;opacity:.9;margin:0 0 .35rem;font-size:clamp(.95rem,1.8vw,1.2rem)}
+.event{padding:.35rem 0}
+.title{font-size:clamp(.95rem,1.9vw,1.25rem);line-height:1.35}
+.meta{opacity:.85;font-size:clamp(.85rem,1.6vw,1.05rem);margin-top:.15rem}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="bar">
-    <div class="brand">This Week at VUMC</div>
-    <div class="clock" id="clock"></div>
-  </div>
-
+  <div class="bar"><div class="brand">This Week at VUMC</div><div class="clock" id="clock"></div></div>
   <div class="panel">
     <div class="panel-header">Upcoming Events</div>
     <div class="vwrap">
-      <div class="vcontent" id="feed"></div>
+      <div class="vcontent">
+        <div class="day"><div class="dayhead">Tue, Oct 7</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 8</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 9</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Oct 12</div><div class="event"><div class="title">Life Groups</div><div class="meta">5:15 am–6:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">5:15 am–6:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Blended Service: Contemporary Service</div><div class="meta">6:30 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">6:30 am–7:45 am</div></div><div class="event"><div class="title">VUMC Fall Festival</div><div class="meta">8:00 am–11:00 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Youth</div><div class="meta">12:00 pm–1:30 pm</div></div><div class="event"><div class="title">Diaper Bank</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Mon, Oct 13</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">2:00 pm–4:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">SPRC</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">3:00 pm–4:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Oct 14</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 15</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Faithful Families</div><div class="meta">1:30 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 16</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Fri, Oct 17</div><div class="event"><div class="title">Trunk or Treat</div><div class="meta">1:30 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Sun, Oct 19</div><div class="event"><div class="title">Life Groups</div><div class="meta">5:15 am–6:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">5:15 am–6:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">6:30 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">6:30 am–7:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">12:00 pm–1:30 pm</div></div></div><div class="day"><div class="dayhead">Mon, Oct 20</div><div class="event"><div class="title">JOY</div><div class="meta">6:00 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Food Pantry</div><div class="meta">12:00 pm–3:00 pm</div></div><div class="event"><div class="title">Community Meal Prep &amp; Delivery</div><div class="meta">1:00 pm–3:00 pm</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">2:00 pm–4:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Finance meeting</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Council Meeting</div><div class="meta">3:00 pm–4:00 pm</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">3:00 pm–4:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Oct 21</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 22</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Higher Ed Training - Annual Conference</div><div class="meta">6:00 am–11:00 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 23</div><div class="event"><div class="title">Food Pantry</div><div class="meta">7:30 am–12:00 pm</div></div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Oct 26</div><div class="event"><div class="title">Life Groups</div><div class="meta">5:15 am–6:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">5:15 am–6:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">6:30 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">6:30 am–7:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">12:00 pm–1:30 pm</div></div><div class="event"><div class="title">Diaper Bank</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Mon, Oct 27</div><div class="event"><div class="title">Food Pantry</div><div class="meta">12:30 pm–3:00 pm</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">2:00 pm–4:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">3:00 pm–4:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Oct 28</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 29</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 30</div><div class="event"><div class="title">Food Pantry</div><div class="meta">7:30 am–12:00 pm</div></div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Nov 2</div><div class="event"><div class="title">Life Groups</div><div class="meta">4:15 am–5:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">4:15 am–5:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">4:30 am–5:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">5:30 am–6:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">11:00 am–12:30 pm</div></div></div><div class="day"><div class="dayhead">Mon, Nov 3</div><div class="event"><div class="title">JOY</div><div class="meta">5:00 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">1:00 pm–3:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">2:00 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Nov 4</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">10:00 am–11:00 am</div></div></div><div class="day"><div class="dayhead">Wed, Nov 5</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">4:45 am–5:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">1:45 pm–2:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">2:30 pm–3:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Nov 6</div><div class="event"><div class="title">Cornerstones</div><div class="meta">6:45 am–8:00 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Trustees</div><div class="meta">1:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">1:30 pm–3:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">2:00 pm–3:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Nov 9</div><div class="event"><div class="title">Life Groups</div><div class="meta">4:15 am–5:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">4:15 am–5:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">4:30 am–5:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">5:30 am–6:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">11:00 am–12:30 pm</div></div><div class="event"><div class="title">Diaper Bank</div><div class="meta">1:00 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Mon, Nov 10</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">1:00 pm–3:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">SPRC</div><div class="meta">1:00 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">2:00 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Nov 11</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">10:00 am–11:00 am</div></div></div><div class="day"><div class="dayhead">Wed, Nov 12</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">4:45 am–5:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">1:45 pm–2:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">2:30 pm–3:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Nov 13</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">1:30 pm–3:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">2:00 pm–3:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Nov 16</div><div class="event"><div class="title">Life Groups</div><div class="meta">4:15 am–5:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">4:15 am–5:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">4:30 am–5:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">5:30 am–6:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">11:00 am–12:30 pm</div></div></div><div class="day"><div class="dayhead">Mon, Nov 17</div><div class="event"><div class="title">JOY</div><div class="meta">5:00 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Community Meal Prep &amp; Delivery</div><div class="meta">12:00 pm–2:00 pm</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">1:00 pm–3:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Finance meeting</div><div class="meta">1:00 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Council Meeting</div><div class="meta">2:00 pm–3:00 pm</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">2:00 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Nov 18</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">10:00 am–11:00 am</div></div></div><div class="day"><div class="dayhead">Wed, Nov 19</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">4:45 am–5:45 am</div></div><div class="event"><div class="title">Faithful Families</div><div class="meta">12:30 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">1:45 pm–2:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">2:30 pm–3:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Nov 20</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">1:30 pm–3:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">2:00 pm–3:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div>
+        <div class="day"><div class="dayhead">Tue, Oct 7</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 8</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 9</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Oct 12</div><div class="event"><div class="title">Life Groups</div><div class="meta">5:15 am–6:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">5:15 am–6:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Blended Service: Contemporary Service</div><div class="meta">6:30 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">6:30 am–7:45 am</div></div><div class="event"><div class="title">VUMC Fall Festival</div><div class="meta">8:00 am–11:00 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Youth</div><div class="meta">12:00 pm–1:30 pm</div></div><div class="event"><div class="title">Diaper Bank</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Mon, Oct 13</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">2:00 pm–4:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">SPRC</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">3:00 pm–4:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Oct 14</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 15</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Faithful Families</div><div class="meta">1:30 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 16</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Fri, Oct 17</div><div class="event"><div class="title">Trunk or Treat</div><div class="meta">1:30 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Sun, Oct 19</div><div class="event"><div class="title">Life Groups</div><div class="meta">5:15 am–6:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">5:15 am–6:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">6:30 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">6:30 am–7:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">12:00 pm–1:30 pm</div></div></div><div class="day"><div class="dayhead">Mon, Oct 20</div><div class="event"><div class="title">JOY</div><div class="meta">6:00 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Food Pantry</div><div class="meta">12:00 pm–3:00 pm</div></div><div class="event"><div class="title">Community Meal Prep &amp; Delivery</div><div class="meta">1:00 pm–3:00 pm</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">2:00 pm–4:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Finance meeting</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Council Meeting</div><div class="meta">3:00 pm–4:00 pm</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">3:00 pm–4:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Oct 21</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 22</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Higher Ed Training - Annual Conference</div><div class="meta">6:00 am–11:00 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 23</div><div class="event"><div class="title">Food Pantry</div><div class="meta">7:30 am–12:00 pm</div></div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Oct 26</div><div class="event"><div class="title">Life Groups</div><div class="meta">5:15 am–6:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">5:15 am–6:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">6:30 am–7:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">6:30 am–7:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">12:00 pm–1:30 pm</div></div><div class="event"><div class="title">Diaper Bank</div><div class="meta">2:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Mon, Oct 27</div><div class="event"><div class="title">Food Pantry</div><div class="meta">12:30 pm–3:00 pm</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">2:00 pm–4:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">3:00 pm–4:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Oct 28</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">11:00 am–12:00 pm</div></div></div><div class="day"><div class="dayhead">Wed, Oct 29</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">5:45 am–6:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">2:45 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">3:30 pm–4:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Oct 30</div><div class="event"><div class="title">Food Pantry</div><div class="meta">7:30 am–12:00 pm</div></div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">2:30 pm–4:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">3:00 pm–4:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Nov 2</div><div class="event"><div class="title">Life Groups</div><div class="meta">4:15 am–5:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">4:15 am–5:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">4:30 am–5:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">5:30 am–6:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">11:00 am–12:30 pm</div></div></div><div class="day"><div class="dayhead">Mon, Nov 3</div><div class="event"><div class="title">JOY</div><div class="meta">5:00 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">1:00 pm–3:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">2:00 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Nov 4</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">10:00 am–11:00 am</div></div></div><div class="day"><div class="dayhead">Wed, Nov 5</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">4:45 am–5:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">1:45 pm–2:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">2:30 pm–3:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Nov 6</div><div class="event"><div class="title">Cornerstones</div><div class="meta">6:45 am–8:00 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Trustees</div><div class="meta">1:00 pm–3:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">1:30 pm–3:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">2:00 pm–3:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Nov 9</div><div class="event"><div class="title">Life Groups</div><div class="meta">4:15 am–5:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">4:15 am–5:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">4:30 am–5:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">5:30 am–6:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">11:00 am–12:30 pm</div></div><div class="event"><div class="title">Diaper Bank</div><div class="meta">1:00 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Mon, Nov 10</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">1:00 pm–3:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">SPRC</div><div class="meta">1:00 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">2:00 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Nov 11</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">10:00 am–11:00 am</div></div></div><div class="day"><div class="dayhead">Wed, Nov 12</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">4:45 am–5:45 am</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">1:45 pm–2:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">2:30 pm–3:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Nov 13</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">1:30 pm–3:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">2:00 pm–3:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div><div class="day"><div class="dayhead">Sun, Nov 16</div><div class="event"><div class="title">Life Groups</div><div class="meta">4:15 am–5:30 am</div></div><div class="event"><div class="title">Parent Connect</div><div class="meta">4:15 am–5:15 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Traditional Worship</div><div class="meta">4:30 am–5:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Contemporary Service</div><div class="meta">5:30 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Life Groups 2</div><div class="meta">5:30 am–6:45 am</div></div><div class="event"><div class="title">Youth</div><div class="meta">11:00 am–12:30 pm</div></div></div><div class="day"><div class="dayhead">Mon, Nov 17</div><div class="event"><div class="title">JOY</div><div class="meta">5:00 am–6:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Community Meal Prep &amp; Delivery</div><div class="meta">12:00 pm–2:00 pm</div></div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">1:00 pm–3:00 pm • Woodford County Jail, 204 Beasley Rd, Versailles, KY 40383, USA</div></div><div class="event"><div class="title">Finance meeting</div><div class="meta">1:00 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Council Meeting</div><div class="meta">2:00 pm–3:00 pm</div></div><div class="event"><div class="title">Boy Scouts Troop 14:  Scouts Troop 14</div><div class="meta">2:00 pm–3:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div></div><div class="day"><div class="dayhead">Tue, Nov 18</div><div class="event"><div class="title">Men&#39;s Jail Ministry</div><div class="meta">10:00 am–11:00 am</div></div></div><div class="day"><div class="dayhead">Wed, Nov 19</div><div class="event"><div class="title">Academy Chapel</div><div class="meta">4:45 am–5:45 am</div></div><div class="event"><div class="title">Faithful Families</div><div class="meta">12:30 pm–2:00 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Church Choir Practice</div><div class="meta">1:45 pm–2:30 pm • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div></div><div class="event"><div class="title">Praise Team practice</div><div class="meta">2:30 pm–3:30 pm</div></div></div><div class="day"><div class="dayhead">Thu, Nov 20</div><div class="event"><div class="title">Scouts Troop 32</div><div class="meta">1:30 pm–3:00 pm</div></div><div class="event"><div class="title">AA, Room #115</div><div class="meta">2:00 pm–3:30 pm • Rm 115 - 230 Paynes Mill Rd, Versailles, KY 40383, USA</div></div></div> <!-- duplicated for seamless loop -->
+      </div>
     </div>
   </div>
 </div>
-
 <script>
-/* ====== CONFIG ====== */
-const ICS_URL = './calendar.ics'; // served locally by GitHub Pages via workflow
-const TIMEZONE = 'America/New_York';  // Eastern (EST/EDT)
-const DAYS_AHEAD = 60;
-
-/* Accessibility: allow font scale and speed via query params */
-(function handleParams(){
-  const p = new URLSearchParams(location.search);
-  const scale = parseFloat(p.get('scale'));
-  if (!isNaN(scale) && scale > 0) document.documentElement.style.setProperty('--scale', scale);
-  const speed = parseInt(p.get('speed'), 10);
-  if (!isNaN(speed) && speed > 0) {
-    for (const sheet of document.styleSheets) {
-      for (const r of sheet.cssRules) {
-        if (r.selectorText === '.vcontent') { r.style.animationDuration = speed + 'ms'; return; }
-      }
-    }
-  }
-})();
-
-/* ====== CLOCK (force Eastern) ====== */
-function tick(){
-  const d = new Date();
-  document.getElementById('clock').textContent = d.toLocaleString('en-US', {
-    timeZone: TIMEZONE,
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  });
-}
-setInterval(tick, 1000); tick();
-
-/* ====== LOAD & PARSE ICS (from same-origin file) ====== */
-async function loadICS(){
-  try {
-    const res = await fetch(ICS_URL, {cache:'no-store'});
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const txt = await res.text();
-    const events = parseICS(txt);
-    render(events);
-  } catch(err) {
-    console.error(err);
-    document.getElementById('feed').innerHTML =
-      '<div class="day"><div class="dayhead">Unable to load calendar.</div><div class="event"><div class="meta">calendar.ics not found yet. GitHub Action may still be updating.</div></div></div>';
-  }
-}
-
-/* Minimal iCal parser for VEVENT blocks */
-function parseICS(ics){
-  ics = ics.replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '');
-  const blocks = ics.split('BEGIN:VEVENT').slice(1).map(b => 'BEGIN:VEVENT' + b);
-  const out = [];
-  for (const block of blocks) {
-    const get = (name) => {
-      const re = new RegExp('^' + name + '(?:;[^:\n]+)?:([^\n]+)', 'm');
-      const m = block.match(re);
-      return m ? m[1].trim() : '';
-    };
-    const unesc = (s) => String(s||'').replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\\\/g,'\\');
-
-    const s = get('DTSTART');
-    const e = get('DTEND');
-    const all = /^DTSTART;VALUE=DATE:/.test(block) || /^\d{8}$/.test(s);
-
-    out.push({
-      title: unesc(get('SUMMARY')) || 'Untitled',
-      location: unesc(get('LOCATION')),
-      allDay: all,
-      start: parseIcsDate(s),
-      end: parseIcsDate(e)
-    });
-  }
-
-  const now = new Date();
-  const until = new Date(now.getTime() + DAYS_AHEAD*86400000);
-  return out
-    .filter(ev => ev.start && ev.start >= now && ev.start <= until)
-    .sort((a,b) => a.start - b.start);
-}
-
-function parseIcsDate(v){
-  if (!v) return null;
-  if (/^\d{8}$/.test(v)) {
-    return new Date(Date.UTC(+v.slice(0,4), +v.slice(4,6)-1, +v.slice(6,8)));
-  }
-  if (/^\d{8}T\d{6}Z$/.test(v)) return new Date(v);
-  if (/^\d{8}T\d{6}$/.test(v)) {
-    const y=+v.slice(0,4), m=+v.slice(4,6)-1, d=+v.slice(6,8),
-          h=+v.slice(9,11), M=+v.slice(11,13), s=+v.slice(13,15)||0;
-    return new Date(y,m,d,h,M,s);
-  }
-  return new Date(v);
-}
-
-/* ====== FORMAT (force Eastern) ====== */
-function fmtDate(d){
-  return d.toLocaleString('en-US', {
-    timeZone: 'America/New_York',
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  });
-}
-function fmtTime(d){
-  return d.toLocaleString('en-US', {
-    timeZone: 'America/New_York',
-    hour: 'numeric',
-    minute: '2-digit'
-  }).toLowerCase();
-}
-function sameDay(a,b){
-  return a.getFullYear()===b.getFullYear()
-      && a.getMonth()===b.getMonth()
-      && a.getDate()===b.getDate();
-}
-
-/* ====== RENDER ====== */
-function render(events){
-  const feed = document.getElementById('feed');
-  if (!events.length){
-    feed.innerHTML = '<div class="day"><div class="dayhead">No events</div></div>';
-    return;
-  }
-
-  const byDay = {} ;
-  for (const e of events){
-    const label = fmtDate(e.start);
-    (byDay[label] = byDay[label] || []).push(e);
-  }
-
-  const labels = Object.keys(byDay).sort((a,b)=> new Date(a) - new Date(b));
-  const html = labels.map(label=>{
-    const rows = byDay[label].map(e=>{
-      const when = e.allDay
-        ? 'All day'
-        : (!e.end || sameDay(e.start,e.end))
-          ? `${fmtTime(e.start)}${e.end ? '–' + fmtTime(e.end) : ''}`
-          : `${fmtDate(e.start)} ${fmtTime(e.start)} → ${fmtDate(e.end)} ${fmtTime(e.end)}`;
-      return `<div class="event">
-                <div class="title">${escapeHtml(e.title)}</div>
-                <div class="meta">${escapeHtml(when)}${e.location ? ' • ' + escapeHtml(e.location) : ''}</div>
-              </div>`;
-    }).join('');
-    return `<div class="day">
-              <div class="dayhead">${escapeHtml(label)}</div>
-              ${rows}
-            </div>`;
-  }).join('');
-
-  feed.innerHTML = html + html; // duplicate for seamless loop
-}
-
-function escapeHtml(s){
-  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
-}
-
-loadICS();
+function tick(){ const d=new Date(); const f=d.toLocaleString('en-US',{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}); document.getElementById('clock').textContent=f; }
+setInterval(tick,1000); tick();
+// nudge animation every 5 min (some embedded browsers pause long animations)
+setInterval(()=>{ document.querySelectorAll('.vcontent').forEach(el=>{ el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }); }, 300000);
 </script>
-</body>
-</html>
+</body></html>
