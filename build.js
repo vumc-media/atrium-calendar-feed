@@ -1,92 +1,214 @@
 // Builds a static, responsive, slow-scrolling calendar HTML for GitHub Pages.
-// Fetches Planning Center ICS from env.ICS_URL and writes index.html.
+// It fetches your Planning Center ICS from env.ICS_URL and writes index.html.
 
 import https from 'https';
 import fs from 'fs';
 
-const ICS_URL = process.env.ICS_URL;
-if (!ICS_URL) { console.error('Missing ICS_URL secret.'); process.exit(1); }
+const ICS_URL = process.env.ICS_URL; // set in repo Settings → Secrets and variables → Actions
+if (!ICS_URL) {
+  console.error('Missing ICS_URL (set a repository secret named ICS_URL with your https://... .ics link).');
+  process.exit(1);
+}
 
-// ---------- Tweakables ----------
+// ── Config you can tweak ─────────────────────────────────────────────
 const BRAND      = 'This Week at VUMC';
 const TIMEZONE   = 'America/New_York';
 const DAYS_AHEAD = 45;
-const MAX_ITEMS  = 120;
-const SCROLL_MS  = 420000; // 7 min. For a quick test, set to 60000 (1 min) to SEE motion.
-// Colors
+const MAX_ITEMS  = 30;
+const SCROLL_MS  = 420000; // 7 minutes; raise to slow down more (e.g., 600000 = 10 min)
+
+// Colors (requested)
 const COLORS = {
-  bannerBg: '#3b556e',
-  bannerFg: '#ffffff',
-  stripRed: '#c62828',
-  panelBg:  '#ffffff',
-  panelFg:  '#000000',
-  rule:     '#e5e7eb'
+  bannerBg:  '#3b556e', // grayish blue
+  bannerFg:  '#ffffff', // white
+  stripRed:  '#c62828', // red for "Upcoming Events"
+  panelBg:   '#ffffff', // white list background
+  panelFg:   '#000000', // black text
+  rule:      '#e5e7eb'  // light divider
 };
-// --------------------------------
+// ────────────────────────────────────────────────────────────────────
 
-fetchText(ICS_URL).then(ics => {
-  const events = parseICS(ics);
-  const now = new Date();
-  const until = new Date(now.getTime() + DAYS_AHEAD * 86400000);
+fetchText(ICS_URL)
+  .then(ics => {
+    const events = parseICS(ics);
+    const now = new Date();
+    const until = new Date(now.getTime() + DAYS_AHEAD * 86400000);
 
-  const list = events
-    .filter(e => e.start && new Date(e.start) >= now && new Date(e.start) <= until)
-    .sort((a,b)=> new Date(a.start) - new Date(b.start))
-    .slice(0, MAX_ITEMS);
+    const filtered = events
+      .filter(e => e.start && new Date(e.start) >= now && new Date(e.start) <= until)
+      .sort((a, b) => new Date(a.start) - new Date(b.start))
+      .slice(0, MAX_ITEMS);
 
-  const html = renderHtml(list);
-  fs.writeFileSync('index.html', html, 'utf8');
-  console.log('index.html written');
-}).catch(err => { console.error(err); process.exit(1); });
+    const html = renderHtml(filtered);
+    fs.writeFileSync('index.html', html, 'utf8');
+    console.log('Wrote index.html');
+  })
+  .catch(err => {
+    console.error('Build failed:', err);
+    process.exit(1);
+  });
 
-function fetchText(url){
+function fetchText(url) {
   return new Promise((resolve, reject) => {
     https.get(url, res => {
       if (res.statusCode !== 200) return reject(new Error('ICS fetch failed: ' + res.statusCode));
-      let data=''; res.on('data', d => data += d); res.on('end', () => resolve(data));
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => resolve(data));
     }).on('error', reject);
   });
 }
 
-// ---- ICS parsing ----
-function parseICS(ics){
+/* ===================================================================
+   ICS PARSER with TZID support
+   =================================================================== */
+
+// Extract a line with params and value, e.g.:
+// DTSTART;TZID=America/New_York:20251012T093000
+function getLine(block, name) {
+  const re = new RegExp('^' + name + '([^:\\n]*):([^\\n]+)', 'm');
+  const m = block.match(re);
+  if (!m) return null;
+  const paramsStr = m[1] || '';
+  const value = m[2].trim();
+  const params = {};
+  paramsStr.replace(/;([^=;:]+)=([^;:]+)/g, (_, k, v) => {
+    params[k.toUpperCase()] = v;
+    return '';
+  });
+  return { value, params };
+}
+
+// Convert a "wall clock in a zone" to a true UTC ISO string
+function wallClockToUTCISO(y, m, d, H, M, S, tz) {
+  // Start with a UTC date that has the same components
+  const t = Date.UTC(y, m, d, H, M, S);
+
+  // Figure the timezone's offset at that instant
+  const offsetMs = tzOffsetAt(new Date(t), tz);
+  // Subtract offset to get real UTC milliseconds
+  return new Date(t - offsetMs).toISOString();
+}
+
+// Get offset of a given time zone at a given UTC Date
+function tzOffsetAt(utcDate, timeZone) {
+  // Format the UTC date *as if* in the target time zone,
+  // then reconstruct a UTC timestamp from the parts
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(utcDate).map(p => [p.type, p.value]));
+  const asIfUTC = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  );
+  // Offset = local_in_zone - actual_utc
+  return asIfUTC - utcDate.getTime();
+}
+
+function parseICS(ics) {
   ics = ics.replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '');
   const blocks = ics.split('BEGIN:VEVENT').slice(1).map(b => 'BEGIN:VEVENT' + b);
+
+  const unesc = s => String(s || '').replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\\\/g, '\\').trim();
+
   return blocks.map(block => {
-    const get = n => {
-      const m = block.match(new RegExp('^' + n + '(?:;[^:\\n]+)?:([^\\n]+)', 'm'));
-      return m ? m[1].trim() : '';
-    };
-    const unesc = s => String(s||'').replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\\\/g,'\\').trim();
-    const s = get('DTSTART'), e = get('DTEND');
-    const all = /^DTSTART;VALUE=DATE:/.test(block) || /^\d{8}$/.test(s);
-    return { title: unesc(get('SUMMARY')) || 'Untitled',
-             location: unesc(get('LOCATION')),
-             description: unesc(get('DESCRIPTION')),
-             allDay: all,
-             start: toISO(s),
-             end: toISO(e) };
+    const sLine = getLine(block, 'DTSTART');
+    const eLine = getLine(block, 'DTEND');
+    const title = unesc(getSimple(block, 'SUMMARY')) || 'Untitled';
+    const location = unesc(getSimple(block, 'LOCATION'));
+    const description = unesc(getSimple(block, 'DESCRIPTION'));
+
+    // Detect all-day from VALUE=DATE param
+    const all =
+      (sLine && sLine.params && sLine.params.VALUE === 'DATE') ||
+      (sLine && /^\d{8}$/.test(sLine.value));
+
+    const startISO = toISOWithZone(sLine, TIMEZONE);
+    const endISO   = toISOWithZone(eLine, TIMEZONE);
+
+    return { title, location, description, allDay: all, start: startISO, end: endISO };
   });
 }
-function toISO(v){
-  if (!v) return null;
-  if (/^\d{8}$/.test(v)) { const y=+v.slice(0,4), m=+v.slice(4,6)-1, d=+v.slice(6,8); return new Date(Date.UTC(y,m,d,0,0,0)).toISOString(); }
-  if (/^\d{8}T\d{6}Z$/.test(v)) return new Date(v).toISOString();
-  if (/^\d{8}T\d{6}$/.test(v)) { const y=+v.slice(0,4), m=+v.slice(4,6)-1, d=+v.slice(6,8), h=+v.slice(9,11), M=+v.slice(11,13), s=+v.slice(13,15); return new Date(y,m,d,h,M,s).toISOString(); }
+
+// Fallback getter without params (for SUMMARY, LOCATION, etc.)
+function getSimple(block, name) {
+  const m = block.match(new RegExp('^' + name + '(?:;[^:\\n]+)?:([^\\n]+)', 'm'));
+  return m ? m[1].trim() : '';
+}
+
+// Convert any ICS value (DATE/DATE-TIME with/without Z, with optional TZID) to ISO UTC
+function toISOWithZone(line, defaultTZ) {
+  if (!line) return null;
+  const v = line.value;
+  const tz = (line.params && line.params.TZID) ? line.params.TZID : null;
+
+  // DATE only (all-day)
+  if (/^\d{8}$/.test(v)) {
+    const y = +v.slice(0,4), m = +v.slice(4,6)-1, d = +v.slice(6,8);
+    // All-day in calendars are typically in the event's local zone; assume defaultTZ
+    return wallClockToUTCISO(y, m, d, 0, 0, 0, tz || defaultTZ);
+  }
+
+  // UTC instant (Z)
+  if (/^\d{8}T\d{6}Z$/.test(v)) {
+    return new Date(v).toISOString();
+  }
+
+  // Local wall-clock (no Z, may have TZID)
+  if (/^\d{8}T\d{6}$/.test(v)) {
+    const y = +v.slice(0,4), m = +v.slice(4,6)-1, d = +v.slice(6,8);
+    const H = +v.slice(9,11), M = +v.slice(11,13), S = +v.slice(13,15);
+    return wallClockToUTCISO(y, m, d, H, M, S, tz || defaultTZ);
+  }
+
+  // Anything else—let Date parse, but this is last resort
   return new Date(v).toISOString();
 }
 
-// ---- formatting ----
-function fmtDate(d){ return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric', timeZone: TIMEZONE}).format(new Date(d)); }
-function fmtTime(d){ return new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit', timeZone: TIMEZONE}).format(new Date(d)).toLowerCase(); }
-function sameDay(a,b){ const A=new Date(a), B=new Date(b||a); return A.getFullYear()==B.getFullYear() && A.getMonth()==B.getMonth() && A.getDate()==B.getDate(); }
+/* ===================================================================
+   Formatting helpers (force ET for display)
+   =================================================================== */
+
+function fmtDate(d){
+  return new Intl.DateTimeFormat('en-US', {
+    weekday:'short', month:'short', day:'numeric', timeZone: TIMEZONE
+  }).format(new Date(d));
+}
+function fmtTime(d){
+  return new Intl.DateTimeFormat('en-US', {
+    hour:'numeric', minute:'2-digit', timeZone: TIMEZONE
+  }).format(new Date(d)).toLowerCase();
+}
+function sameDay(a,b){
+  const A=new Date(a), B=new Date(b||a);
+  return A.getFullYear()==B.getFullYear() && A.getMonth()==B.getMonth() && A.getDate()==B.getDate();
+}
 function esc(s){ return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-// ---- HTML ----
+/* ===================================================================
+   HTML render
+   =================================================================== */
+
 function renderHtml(events){
   const groups = {};
-  events.forEach(e => { const k = fmtDate(e.start); (groups[k] = groups[k] || []).push(e); });
-  const labels = Object.keys(groups).sort((a,b)=> new Date(a) - new Date(b));
+  events.forEach(e => {
+    const label = fmtDate(e.start);
+    (groups[label] = groups[label] || []).push(e);
+  });
+  // Sort groups by the actual first event date within each label (stable)
+  const labels = Object.keys(groups).sort((a, b) => {
+    const aMin = groups[a].reduce((min, e) => Math.min(min, +new Date(e.start)), Infinity);
+    const bMin = groups[b].reduce((min, e) => Math.min(min, +new Date(e.start)), Infinity);
+    return aMin - bMin;
+  });
 
   const blocks = labels.map(label => {
     const rows = groups[label].map(e => {
@@ -94,32 +216,60 @@ function renderHtml(events){
       if (e.allDay) when = 'All day';
       else if (!e.end || sameDay(e.start,e.end)) when = `${fmtTime(e.start)}${e.end ? '–' + fmtTime(e.end) : ''}`;
       else when = `${fmtDate(e.start)} ${fmtTime(e.start)} → ${fmtDate(e.end)} ${fmtTime(e.end)}`;
-      return `<div class="event"><div class="title">${esc(e.title)}</div><div class="meta">${esc(when)}${e.location?` • ${esc(e.location)}`:''}</div></div>`;
+      return `<div class="event">
+                <div class="title">${esc(e.title)}</div>
+                <div class="meta">${esc(when)}${e.location ? ` • ${esc(e.location)}` : ''}</div>
+              </div>`;
     }).join('');
-    return `<div class="day"><div class="dayhead">${esc(label)}</div>${rows}</div>`;
+    return `<div class="day">
+              <div class="dayhead">${esc(label)}</div>
+              ${rows}
+            </div>`;
   }).join('');
 
   return `<!doctype html><html><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${BRAND}</title>
 <style>
 :root{
-  --banner-bg:${COLORS.bannerBg}; --banner-fg:${COLORS.bannerFg};
-  --accent-red:${COLORS.stripRed}; --panel-bg:${COLORS.panelBg};
-  --panel-fg:${COLORS.panelFg};   --rule:${COLORS.rule};
+  --banner-bg:${COLORS.bannerBg};
+  --banner-fg:${COLORS.bannerFg};
+  --accent-red:${COLORS.stripRed};
+  --panel-bg:${COLORS.panelBg};
+  --panel-fg:${COLORS.panelFg};
+  --rule:${COLORS.rule};
   --scroll-ms:${SCROLL_MS}ms;
 }
 html,body{height:100%}
-body{margin:0;background:transparent;color:var(--panel-fg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+body{
+  margin:0;background:transparent;color:var(--panel-fg);
+  font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
 .wrap{display:flex;flex-direction:column;width:100%;height:100%;box-sizing:border-box}
-.bar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--banner-bg);color:var(--banner-fg)}
+
+/* Top banner (grayish blue with white) */
+.bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.6rem 1rem;background:var(--banner-bg);color:var(--banner-fg)
+}
 .brand{font-weight:800;font-size:clamp(1.1rem,2.2vw,2rem);letter-spacing:.02em}
 .clock{font-weight:700;font-variant-numeric:tabular-nums;font-size:clamp(.95rem,1.8vw,1.4rem)}
-.panel{display:flex;flex-direction:column;background:var(--panel-bg);color:var(--panel-fg);border-left:1px solid var(--rule);border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);height:100%;box-sizing:border-box}
+
+/* Panel (white) with red header */
+.panel{
+  display:flex;flex-direction:column;background:var(--panel-bg);color:var(--panel-fg);
+  border-left:1px solid var(--rule);border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  height:100%;box-sizing:border-box
+}
 .panel-header{background:var(--accent-red);color:#fff;padding:.5rem .9rem;font-weight:800;font-size:clamp(1rem,2vw,1.4rem)}
+
+/* Scroller */
 .vwrap{position:relative;overflow:hidden;height:100%}
-.vcontent{position:absolute;width:100%;animation:vscroll var(--scroll-ms) linear infinite; will-change: transform;}
+.vcontent{position:absolute;width:100%;animation:vscroll var(--scroll-ms) linear infinite}
 @keyframes vscroll{0%{transform:translateY(0)}98%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+
+/* Events */
 .day{padding:.7rem 1rem .8rem;border-bottom:1px solid var(--rule)}
 .dayhead{font-weight:800;opacity:.9;margin:0 0 .35rem;font-size:clamp(.95rem,1.8vw,1.2rem)}
 .event{padding:.35rem 0}
@@ -129,22 +279,32 @@ body{margin:0;background:transparent;color:var(--panel-fg);font-family:system-ui
 </head>
 <body>
 <div class="wrap">
-  <div class="bar"><div class="brand">${BRAND}</div><div class="clock" id="clock"></div></div>
+  <div class="bar">
+    <div class="brand">${BRAND}</div>
+    <div class="clock" id="clock"></div>
+  </div>
   <div class="panel">
     <div class="panel-header">Upcoming Events</div>
     <div class="vwrap">
       <div class="vcontent">
         ${blocks || '<div class="day"><div class="dayhead">No events</div></div>'}
-        ${blocks} <!-- duplicated for seamless loop -->
+        ${blocks} <!-- duplicate for seamless looping -->
       </div>
     </div>
   </div>
 </div>
 <script>
-function tick(){ const d=new Date(); const f=d.toLocaleString('en-US',{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}); document.getElementById('clock').textContent=f; }
+// Force header clock to ET as well
+function tick(){
+  const d=new Date();
+  const f=new Intl.DateTimeFormat('en-US',{
+    timeZone:'${TIMEZONE}',
+    weekday:'long',month:'long',day:'numeric',
+    hour:'numeric',minute:'2-digit'
+  }).format(d);
+  document.getElementById('clock').textContent=f + ' ET';
+}
 setInterval(tick,1000); tick();
-// nudge animation every 5 min (some embedded browsers pause long animations)
-setInterval(()=>{ document.querySelectorAll('.vcontent').forEach(el=>{ el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }); }, 300000);
 </script>
 </body></html>`;
 }
