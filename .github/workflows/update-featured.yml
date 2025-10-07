@@ -1,0 +1,71 @@
+name: Update featured events
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write  # needed to commit files
+
+jobs:
+  fetch-featured:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Compute time window
+        id: window
+        run: |
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # show next 60 days
+          UNTIL=$(date -u -d "+60 days" +"%Y-%m-%dT%H:%M:%SZ")
+          echo "now=$NOW"   >> $GITHUB_OUTPUT
+          echo "until=$UNTIL" >> $GITHUB_OUTPUT
+
+      - name: Fetch events from Planning Center (JSON:API)
+        env:
+          PCO_APP_ID: ${{ secrets.PCO_APP_ID }}
+          PCO_SECRET: ${{ secrets.PCO_SECRET }}
+          NOW:   ${{ steps.window.outputs.now }}
+          UNTIL: ${{ steps.window.outputs.until }}
+        run: |
+          curl -sS -u "$PCO_APP_ID:$PCO_SECRET" \
+            "https://api.planningcenteronline.com/calendar/v2/events?per_page=100&order=starts_at&where[starts_at][gte]=$NOW&where[starts_at][lte]=$UNTIL" \
+            -o raw.json
+
+      - name: Build featured.json (only featured events, simplified fields)
+        run: |
+          # Some orgs have "attributes.featured", others "attributes.is_featured".
+          # We support both; also carry name, starts_at, ends_at, location_name, all_day where available.
+          jq '{
+                updated: (now|tojson),
+                events: [
+                  .data[]
+                  | select((.attributes.featured // .attributes.is_featured // false) == true)
+                  | {
+                      title:        (.attributes.name // .attributes.title // "Untitled"),
+                      start:        .attributes.starts_at,
+                      end:          .attributes.ends_at,
+                      location:     (.attributes.location_name // ""),
+                      allDay:       (.attributes.all_day // false)
+                    }
+                ]
+              }' raw.json > featured.json
+
+          # Keep a copy of the raw fetch for troubleshooting (ignored by commit step below)
+          mv raw.json .raw_events_last_fetch.json
+
+      - name: Commit if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update featured.json [skip ci]"
+          file_pattern: "featured.json"
