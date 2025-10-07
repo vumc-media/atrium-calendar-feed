@@ -1,0 +1,25 @@
+name: Update calendar.ics
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  fetch-ics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download ICS
+        run: |
+          curl -L --fail "https://calendar.planningcenteronline.com/icals/eJxj4ajmsGLLz2Tu2cJoxZVanF9QUs1pxV6R5qmkYWZkZG6iAyJNwaQZmDQHkxZg0pLNis01xIqt2FOJPzEnJz61LDWvpJjNmgMoVprJ3HJT0oq9rMRTiQ8kWZKZmwqR4y5ILErMLa5mAAC_UiFG8e43188950d46674489ec120b9dc1c6feba180d6" -o calendar.ics
+
+      - name: Commit if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update calendar.ics [skip ci]"
+          file_pattern: "calendar.ics"
