@@ -1,10 +1,10 @@
-// Builds a static, responsive, slow-scrolling calendar HTML for GitHub Pages.
-// It fetches your Planning Center ICS from env.ICS_URL and writes index.html.
+// Builds a static, responsive, auto-scrolling calendar HTML for GitHub Pages.
+// Fetches Planning Center ICS from env.ICS_URL and writes index.html.
 
 import https from 'https';
 import fs from 'fs';
 
-const ICS_URL = process.env.ICS_URL; // set in repo Settings → Secrets and variables → Actions
+const ICS_URL = process.env.ICS_URL;
 if (!ICS_URL) {
   console.error('Missing ICS_URL (set a repository secret named ICS_URL with your https://... .ics link).');
   process.exit(1);
@@ -15,16 +15,16 @@ const BRAND      = 'This Week at VUMC';
 const TIMEZONE   = 'America/New_York';
 const DAYS_AHEAD = 45;
 const MAX_ITEMS  = 30;
-const SCROLL_MS  = 420000; // 7 minutes; raise to slow down more (e.g., 600000 = 10 min)
+const SCROLL_MS  = 90000; // 🔥 faster base speed (was 420000 = 7 min)
 
-// Colors (requested)
+// Colors
 const COLORS = {
-  bannerBg:  '#3b556e', // grayish blue
-  bannerFg:  '#ffffff', // white
-  stripRed:  '#c62828', // red for "Upcoming Events"
-  panelBg:   '#ffffff', // white list background
-  panelFg:   '#000000', // black text
-  rule:      '#e5e7eb'  // light divider
+  bannerBg:  '#3b556e',
+  bannerFg:  '#ffffff',
+  stripRed:  '#c62828',
+  panelBg:   '#ffffff',
+  panelFg:   '#000000',
+  rule:      '#e5e7eb'
 };
 // ────────────────────────────────────────────────────────────────────
 
@@ -59,12 +59,7 @@ function fetchText(url) {
   });
 }
 
-/* ===================================================================
-   ICS PARSER with TZID support
-   =================================================================== */
-
-// Extract a line with params and value, e.g.:
-// DTSTART;TZID=America/New_York:20251012T093000
+// ── ICS parser with TZID support ────────────────────────────────────
 function getLine(block, name) {
   const re = new RegExp('^' + name + '([^:\\n]*):([^\\n]+)', 'm');
   const m = block.match(re);
@@ -79,21 +74,13 @@ function getLine(block, name) {
   return { value, params };
 }
 
-// Convert a "wall clock in a zone" to a true UTC ISO string
 function wallClockToUTCISO(y, m, d, H, M, S, tz) {
-  // Start with a UTC date that has the same components
   const t = Date.UTC(y, m, d, H, M, S);
-
-  // Figure the timezone's offset at that instant
   const offsetMs = tzOffsetAt(new Date(t), tz);
-  // Subtract offset to get real UTC milliseconds
   return new Date(t - offsetMs).toISOString();
 }
 
-// Get offset of a given time zone at a given UTC Date
 function tzOffsetAt(utcDate, timeZone) {
-  // Format the UTC date *as if* in the target time zone,
-  // then reconstruct a UTC timestamp from the parts
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone,
     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -109,14 +96,35 @@ function tzOffsetAt(utcDate, timeZone) {
     Number(parts.minute),
     Number(parts.second)
   );
-  // Offset = local_in_zone - actual_utc
   return asIfUTC - utcDate.getTime();
+}
+
+function getSimple(block, name) {
+  const m = block.match(new RegExp('^' + name + '(?:;[^:\\n]+)?:([^\\n]+)', 'm'));
+  return m ? m[1].trim() : '';
+}
+
+function toISOWithZone(line, defaultTZ) {
+  if (!line) return null;
+  const v = line.value;
+  const tz = (line.params && line.params.TZID) ? line.params.TZID : null;
+
+  if (/^\d{8}$/.test(v)) {
+    const y = +v.slice(0,4), m = +v.slice(4,6)-1, d = +v.slice(6,8);
+    return wallClockToUTCISO(y, m, d, 0, 0, 0, tz || defaultTZ);
+  }
+  if (/^\d{8}T\d{6}Z$/.test(v)) return new Date(v).toISOString();
+  if (/^\d{8}T\d{6}$/.test(v)) {
+    const y = +v.slice(0,4), m = +v.slice(4,6)-1, d = +v.slice(6,8);
+    const H = +v.slice(9,11), M = +v.slice(11,13), S = +v.slice(13,15);
+    return wallClockToUTCISO(y, m, d, H, M, S, tz || defaultTZ);
+  }
+  return new Date(v).toISOString();
 }
 
 function parseICS(ics) {
   ics = ics.replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '');
   const blocks = ics.split('BEGIN:VEVENT').slice(1).map(b => 'BEGIN:VEVENT' + b);
-
   const unesc = s => String(s || '').replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\\\/g, '\\').trim();
 
   return blocks.map(block => {
@@ -125,58 +133,16 @@ function parseICS(ics) {
     const title = unesc(getSimple(block, 'SUMMARY')) || 'Untitled';
     const location = unesc(getSimple(block, 'LOCATION'));
     const description = unesc(getSimple(block, 'DESCRIPTION'));
-
-    // Detect all-day from VALUE=DATE param
     const all =
       (sLine && sLine.params && sLine.params.VALUE === 'DATE') ||
       (sLine && /^\d{8}$/.test(sLine.value));
-
     const startISO = toISOWithZone(sLine, TIMEZONE);
     const endISO   = toISOWithZone(eLine, TIMEZONE);
-
     return { title, location, description, allDay: all, start: startISO, end: endISO };
   });
 }
 
-// Fallback getter without params (for SUMMARY, LOCATION, etc.)
-function getSimple(block, name) {
-  const m = block.match(new RegExp('^' + name + '(?:;[^:\\n]+)?:([^\\n]+)', 'm'));
-  return m ? m[1].trim() : '';
-}
-
-// Convert any ICS value (DATE/DATE-TIME with/without Z, with optional TZID) to ISO UTC
-function toISOWithZone(line, defaultTZ) {
-  if (!line) return null;
-  const v = line.value;
-  const tz = (line.params && line.params.TZID) ? line.params.TZID : null;
-
-  // DATE only (all-day)
-  if (/^\d{8}$/.test(v)) {
-    const y = +v.slice(0,4), m = +v.slice(4,6)-1, d = +v.slice(6,8);
-    // All-day in calendars are typically in the event's local zone; assume defaultTZ
-    return wallClockToUTCISO(y, m, d, 0, 0, 0, tz || defaultTZ);
-  }
-
-  // UTC instant (Z)
-  if (/^\d{8}T\d{6}Z$/.test(v)) {
-    return new Date(v).toISOString();
-  }
-
-  // Local wall-clock (no Z, may have TZID)
-  if (/^\d{8}T\d{6}$/.test(v)) {
-    const y = +v.slice(0,4), m = +v.slice(4,6)-1, d = +v.slice(6,8);
-    const H = +v.slice(9,11), M = +v.slice(11,13), S = +v.slice(13,15);
-    return wallClockToUTCISO(y, m, d, H, M, S, tz || defaultTZ);
-  }
-
-  // Anything else—let Date parse, but this is last resort
-  return new Date(v).toISOString();
-}
-
-/* ===================================================================
-   Formatting helpers (force ET for display)
-   =================================================================== */
-
+// ── Formatting ─────────────────────────────────────────────────────
 function fmtDate(d){
   return new Intl.DateTimeFormat('en-US', {
     weekday:'short', month:'short', day:'numeric', timeZone: TIMEZONE
@@ -193,17 +159,13 @@ function sameDay(a,b){
 }
 function esc(s){ return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-/* ===================================================================
-   HTML render
-   =================================================================== */
-
+// ── HTML render ─────────────────────────────────────────────────────
 function renderHtml(events){
   const groups = {};
   events.forEach(e => {
     const label = fmtDate(e.start);
     (groups[label] = groups[label] || []).push(e);
   });
-  // Sort groups by the actual first event date within each label (stable)
   const labels = Object.keys(groups).sort((a, b) => {
     const aMin = groups[a].reduce((min, e) => Math.min(min, +new Date(e.start)), Infinity);
     const bMin = groups[b].reduce((min, e) => Math.min(min, +new Date(e.start)), Infinity);
@@ -288,23 +250,34 @@ body{
     <div class="vwrap">
       <div class="vcontent">
         ${blocks || '<div class="day"><div class="dayhead">No events</div></div>'}
-        ${blocks} <!-- duplicate for seamless looping -->
+        ${blocks}
       </div>
     </div>
   </div>
 </div>
 <script>
-// Force header clock to ET as well
+// Force ET for clock
 function tick(){
   const d=new Date();
   const f=new Intl.DateTimeFormat('en-US',{
     timeZone:'${TIMEZONE}',
-    weekday:'long',month:'long',day:'numeric',
-    hour:'numeric',minute:'2-digit'
+    weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'
   }).format(d);
-  document.getElementById('clock').textContent=f + ' ET';
+  document.getElementById('clock').textContent=f+' ET';
 }
 setInterval(tick,1000); tick();
+
+// 🔽 Auto-tune scroll speed by content height
+(function autoSpeed(){
+  const root=document.documentElement;
+  const content=document.querySelector('.vcontent');
+  const viewport=document.querySelector('.vwrap');
+  if(!content||!viewport)return;
+  const oneListHeight=content.scrollHeight/2;
+  const pxPerSec=45; // raise = faster
+  const durationMs=Math.max(30000,Math.round((oneListHeight/pxPerSec)*1000));
+  root.style.setProperty('--scroll-ms',durationMs+'ms');
+})();
 </script>
 </body></html>`;
 }
