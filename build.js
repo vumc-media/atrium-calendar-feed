@@ -14,7 +14,7 @@ if (!ICS_URL) {
 const BRAND      = 'This Week at VUMC';
 const TIMEZONE   = 'America/New_York';
 const DAYS_AHEAD = 45;
-const MAX_ITEMS  = 30;
+const MAX_ITEMS  = 120;
 const SCROLL_MS  = 90000; // 1.5 minutes per loop base; auto-tuned below
 
 // Colors
