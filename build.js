@@ -15,7 +15,7 @@ const BRAND      = 'This Week at VUMC';
 const TIMEZONE   = 'America/New_York';
 const DAYS_AHEAD = 45;
 const MAX_ITEMS  = 30;
-const SCROLL_MS  = 90000; // 🔥 faster base speed (was 420000 = 7 min)
+const SCROLL_MS  = 90000; // 1.5 minutes per loop base; auto-tuned below
 
 // Colors
 const COLORS = {
@@ -25,6 +25,13 @@ const COLORS = {
   panelBg:   '#ffffff',
   panelFg:   '#000000',
   rule:      '#e5e7eb'
+};
+
+// Weather (Versailles, KY)
+const WX = {
+  lat: 38.052,
+  lon: -84.729,
+  place: 'Versailles, KY'
 };
 // ────────────────────────────────────────────────────────────────────
 
@@ -67,10 +74,7 @@ function getLine(block, name) {
   const paramsStr = m[1] || '';
   const value = m[2].trim();
   const params = {};
-  paramsStr.replace(/;([^=;:]+)=([^;:]+)/g, (_, k, v) => {
-    params[k.toUpperCase()] = v;
-    return '';
-  });
+  paramsStr.replace(/;([^=;:]+)=([^;:]+)/g, (_, k, v) => { params[k.toUpperCase()] = v; return ''; });
   return { value, params };
 }
 
@@ -89,12 +93,8 @@ function tzOffsetAt(utcDate, timeZone) {
   });
   const parts = Object.fromEntries(fmt.formatToParts(utcDate).map(p => [p.type, p.value]));
   const asIfUTC = Date.UTC(
-    Number(parts.year),
-    Number(parts.month) - 1,
-    Number(parts.day),
-    Number(parts.hour),
-    Number(parts.minute),
-    Number(parts.second)
+    Number(parts.year), Number(parts.month)-1, Number(parts.day),
+    Number(parts.hour), Number(parts.minute), Number(parts.second)
   );
   return asIfUTC - utcDate.getTime();
 }
@@ -216,7 +216,14 @@ body{
   padding:.6rem 1rem;background:var(--banner-bg);color:var(--banner-fg)
 }
 .brand{font-weight:800;font-size:clamp(1.1rem,2.2vw,2rem);letter-spacing:.02em}
+.right{display:flex;align-items:center;gap:14px}
 .clock{font-weight:700;font-variant-numeric:tabular-nums;font-size:clamp(.95rem,1.8vw,1.4rem)}
+
+/* Weather badge */
+.weather{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,.85)}
+.weather .w-icon{font-size:18px;line-height:1}
+.weather .w-temp{color:#fff;font-weight:800;font-size:16px}
+.badge{font-size:12px;background:rgba(255,255,255,.15);padding:4px 8px;border-radius:999px;color:#fff}
 
 /* Panel (white) with red header */
 .panel{
@@ -243,7 +250,16 @@ body{
 <div class="wrap">
   <div class="bar">
     <div class="brand">${BRAND}</div>
-    <div class="clock" id="clock"></div>
+    <div class="right">
+      <div class="weather" id="weather" aria-label="Current weather for ${WX.place}">
+        <span class="w-icon">⛅</span>
+        <span class="w-temp" id="wTemp">--°</span>
+        <span id="wCond">Loading…</span>
+        <span class="badge" id="wHiLo">H --° / L --°</span>
+        <span class="badge">${WX.place}</span>
+      </div>
+      <div class="clock" id="clock"></div>
+    </div>
   </div>
   <div class="panel">
     <div class="panel-header">Upcoming Events</div>
@@ -274,10 +290,64 @@ setInterval(tick,1000); tick();
   const viewport=document.querySelector('.vwrap');
   if(!content||!viewport)return;
   const oneListHeight=content.scrollHeight/2;
-  const pxPerSec=45; // raise = faster
+  const pxPerSec=45; // raise = faster (e.g., 60); lower = slower
   const durationMs=Math.max(30000,Math.round((oneListHeight/pxPerSec)*1000));
   root.style.setProperty('--scroll-ms',durationMs+'ms');
 })();
+
+// --- Weather (Open-Meteo) ---
+const WX = {
+  lat: ${WX.lat}, lon: ${WX.lon}, place: ${JSON.stringify(WX.place)},
+  url() {
+    const base='https://api.open-meteo.com/v1/forecast';
+    const p=new URLSearchParams({
+      latitude: WX.lat, longitude: WX.lon,
+      current_weather: 'true',
+      daily: 'temperature_2m_max,temperature_2m_min,weathercode',
+      temperature_unit: 'fahrenheit',
+      wind_speed_unit: 'mph',
+      timezone: 'auto',
+      forecast_days: '1'
+    });
+    return base+'?'+p.toString();
+  },
+  emoji(code){
+    if ([0].includes(code)) return '☀️';
+    if ([1,2].includes(code)) return '⛅';
+    if ([3].includes(code)) return '☁️';
+    if ([45,48].includes(code)) return '🌫️';
+    if ([51,53,55].includes(code)) return '🌦️';
+    if ([61,63,65].includes(code)) return '🌧️';
+    if ([66,67].includes(code)) return '🌧️❄️';
+    if ([71,73,75,77].includes(code)) return '❄️';
+    if ([80,81,82].includes(code)) return '🌧️';
+    if ([85,86].includes(code)) return '🌨️';
+    if ([95,96,99].includes(code)) return '⛈️';
+    return '🌡️';
+  },
+  label(code){
+    const map={0:'Clear',1:'Mostly Sunny',2:'Partly Cloudy',3:'Cloudy',45:'Fog',48:'Freezing Fog',51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',61:'Light Rain',63:'Rain',65:'Heavy Rain',66:'Freezing Rain',67:'Freezing Rain',71:'Light Snow',73:'Snow',75:'Heavy Snow',77:'Snow Grains',80:'Rain Showers',81:'Rain Showers',82:'Heavy Showers',85:'Snow Showers',86:'Snow Showers',95:'Thunderstorms',96:'T’storms',99:'T’storms'};
+    return map[code] || '—';
+  }
+};
+
+async function loadWeather(){
+  try{
+    const r = await fetch(WX.url(), { cache: 'no-store' });
+    const j = await r.json();
+    const cur = j.current_weather;
+    const hi = j?.daily?.temperature_2m_max?.[0];
+    const lo = j?.daily?.temperature_2m_min?.[0];
+    document.getElementById('wTemp').textContent = Math.round(cur.temperature)+'°';
+    document.getElementById('wCond').textContent = WX.label(cur.weathercode);
+    document.querySelector('#weather .w-icon').textContent = WX.emoji(cur.weathercode);
+    document.getElementById('wHiLo').textContent = 'H '+Math.round(hi)+'° / L '+Math.round(lo)+'°';
+  }catch(e){
+    document.getElementById('wCond').textContent = 'Weather unavailable';
+  }
+}
+loadWeather();
+setInterval(loadWeather, 15*60*1000);
 </script>
 </body></html>`;
 }
