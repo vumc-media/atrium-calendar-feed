@@ -10,7 +10,7 @@
   --panel-bg:#ffffff;
   --panel-fg:#000000;
   --rule:#e5e7eb;
-  --scroll-ms:420000ms;
+  --scroll-ms:90000ms;
 }
 html,body{height:100%}
 body{
@@ -299,22 +299,33 @@ body{
                 <div class="title">JOY</div>
                 <div class="meta">10:00 am–11:30 am • Versailles United Methodist Church - 230 Paynes Mill Rd, Versailles, Kentucky 40383</div>
               </div>
-            </div> <!-- duplicate for seamless looping -->
+            </div>
       </div>
     </div>
   </div>
 </div>
 <script>
-// Force header clock to ET as well
+// Force ET for clock
 function tick(){
   const d=new Date();
   const f=new Intl.DateTimeFormat('en-US',{
     timeZone:'America/New_York',
-    weekday:'long',month:'long',day:'numeric',
-    hour:'numeric',minute:'2-digit'
+    weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'
   }).format(d);
-  document.getElementById('clock').textContent=f + ' ET';
+  document.getElementById('clock').textContent=f+' ET';
 }
 setInterval(tick,1000); tick();
+
+// 🔽 Auto-tune scroll speed by content height
+(function autoSpeed(){
+  const root=document.documentElement;
+  const content=document.querySelector('.vcontent');
+  const viewport=document.querySelector('.vwrap');
+  if(!content||!viewport)return;
+  const oneListHeight=content.scrollHeight/2;
+  const pxPerSec=45; // raise = faster
+  const durationMs=Math.max(30000,Math.round((oneListHeight/pxPerSec)*1000));
+  root.style.setProperty('--scroll-ms',durationMs+'ms');
+})();
 </script>
 </body></html>
